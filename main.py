@@ -4,8 +4,8 @@ import os
 import logging
 import agent
 import asyncio
-from kseniaWebsocketLibrary import ksenia_lares
-# from ksenia_lares.websocketmanager import WebSocketManager
+# from kseniaWebsocketLibrary import ksenia_lares
+import ksenia_lares
 
 load_dotenv()
 
@@ -19,12 +19,18 @@ ispy_api_port = int(os.getenv('ISPY_API_PORT', 8090))
 
 # POLL_INTERVAL_MINUTES = int(os.getenv('POLL_INTERVAL_MINUTES', 5))  
 
+async def handle_systems_message(data):
+    print("System data:", data)
+async def handle_zone_message(data):
+    print("Zone data:", data)
+    
 async def main():
     logger = logging.getLogger('Lares')
     ws_manager = ksenia_lares.WebSocketManager(ip, pin, port, logger)
     await ws_manager.connectSecure()
     
-    ws_manager.register_listener('system', lambda data: print("System event:", data))
+    ws_manager.register_listener('systems', handle_systems_message)
+    ws_manager.register_listener('zones', handle_zone_message)
     co_routine = ws_manager.listener()
     await co_routine
     # co_routine = ws_manager.getSystem()
