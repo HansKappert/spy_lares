@@ -9,9 +9,9 @@ import ksenia_lares
 
 load_dotenv()
 
-ip   =     os.getenv('WS_IP'  )
-pin  = int(os.getenv('WS_PIN' ))
-port = int(os.getenv('WS_PORT'))
+ksenia_ip   =     os.getenv('KSENIA_IP'  )
+ksenia_pin  = int(os.getenv('KSENIA_PIN' ))
+ksenia_port = int(os.getenv('KSENIA_PORT'))
 ispy_api_port = int(os.getenv('ISPY_API_PORT', 8090))
 
 # WAIT_FROM = os.getenv('WAIT_FROM')
@@ -26,12 +26,13 @@ async def handle_zone_message(data):
     
 async def main():
     logger = logging.getLogger('Lares')
-    ws_manager = ksenia_lares.WebSocketManager(ip, pin, port, logger)
+    ws_manager = ksenia_lares.WebSocketManager(ksenia_ip, ksenia_pin, ksenia_port, logger)
     await ws_manager.connectSecure()
-    
+    print("connected")
     ws_manager.register_listener('systems', handle_systems_message)
     ws_manager.register_listener('zones', handle_zone_message)
     co_routine = ws_manager.listener()
+    print("listening")
     await co_routine
     # co_routine = ws_manager.getSystem()
     # system_info = await co_routine
