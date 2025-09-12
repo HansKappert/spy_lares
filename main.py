@@ -12,6 +12,8 @@ load_dotenv()
 ksenia_ip   =     os.getenv('KSENIA_IP'  )
 ksenia_pin  = int(os.getenv('KSENIA_PIN' ))
 ksenia_port = int(os.getenv('KSENIA_PORT'))
+
+ispy_api_ip   =     os.getenv('ISPY_IP'  )
 ispy_api_port = int(os.getenv('ISPY_API_PORT', 8090))
 
 # WAIT_FROM = os.getenv('WAIT_FROM')
@@ -20,7 +22,21 @@ ispy_api_port = int(os.getenv('ISPY_API_PORT', 8090))
 # POLL_INTERVAL_MINUTES = int(os.getenv('POLL_INTERVAL_MINUTES', 5))  
 
 async def handle_systems_message(data):
-    print("System data:", data)
+    data = [{'ID': '1', 'ARM': {'D': 'Uitgeschakeld', 'S': 'D'}, 'TIME': {'GMT': '1757656800', 'TZ': '2', 'TZM': '120', 'DAWN': '07:10', 'DUSK': '20:07'}}]
+    if "ARM" in data[0].keys():
+        modus = data[0]["ARM"]["D"]
+
+        url = f"http://{ispy_api_ip}:{ispy_api_port}"
+        ispy = agent.Agent(url)
+
+        try:
+            if modus == "Ingeschakeld":
+                ispy.arm()
+            if modus == "Uitgeschakeld":
+                ispy.disarm()
+        except Exception as e:
+            print(f"Afhandelen van event {modus}: {e}")
+
 async def handle_zone_message(data):
     print("Zone data:", data)
     
@@ -30,22 +46,11 @@ async def main():
     await ws_manager.connectSecure()
     print("connected")
     ws_manager.register_listener('systems', handle_systems_message)
-    ws_manager.register_listener('zones', handle_zone_message)
+    # ws_manager.register_listener('zones', handle_zone_message)
     co_routine = ws_manager.listener()
     print("listening")
     await co_routine
-    # co_routine = ws_manager.getSystem()
-    # system_info = await co_routine
-
-
-    # url = f"http://{ip}:{ispy_api_port}"
-    # ispy = agent.Agent(url)
-
-    # # sess = aiohttp.ClientSession()
-    # # tc2 = agent.Agent(url,sess)
-
-    # devices = await ispy.get_devices()
-    # print(devices)
     pass
 
-asyncio.run(main())
+asyncio.run(handle_systems_message(''))
+# asyncio.run(main())
