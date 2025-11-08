@@ -6,6 +6,7 @@ import agent
 import asyncio
 # from kseniaWebsocketLibrary import ksenia_lares
 import ksenia_lares
+import logging
 
 load_dotenv()
 
@@ -21,7 +22,10 @@ ispy_api_port = int(os.getenv('ISPY_API_PORT', 8090))
 
 # POLL_INTERVAL_MINUTES = int(os.getenv('POLL_INTERVAL_MINUTES', 5))  
 
+
 async def handle_systems_message(data):
+    logger = logging.getLogger('ispy_activator')
+    logger.info(data)
     if not data:
         return
     # data = [{'ID': '1', 'ARM': {'D': 'Uitgeschakeld', 'S': 'D'}, 'TIME': {'GMT': '1757656800', 'TZ': '2', 'TZM': '120', 'DAWN': '07:10', 'DUSK': '20:07'}}]
@@ -33,24 +37,34 @@ async def handle_systems_message(data):
 
         try:
             if modus == "Ingeschakeld":
+                logger.info(f"Camera alerts inschakelen")
                 ispy.arm()
             if modus == "Uitgeschakeld":
+                logger.info(f"Camera alerts uitschakelen")
                 ispy.disarm()
         except Exception as e:
-            print(f"Afhandelen van event {modus}: {e}")
+            logger.info(f"Fout bij afhandelen van event {modus}: {e}")
 
 async def handle_zone_message(data):
-    print("Zone data:", data)
+    logging.info("Zone data:", data)
     
 async def main():
+    logging.basicConfig(filename="logging.txt",
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=logging.INFO)
+
     logger = logging.getLogger('Lares')
     ws_manager = ksenia_lares.WebSocketManager(ksenia_ip, ksenia_pin, ksenia_port, logger)
     await ws_manager.connectSecure()
-    print("connected")
+    logger = logging.getLogger('ispy_activator')
+    logger.setLevel(logging.DEBUG)
+    logger.info("connected")
     ws_manager.register_listener('systems', handle_systems_message)
     # ws_manager.register_listener('zones', handle_zone_message)
     co_routine = ws_manager.listener()
-    print("listening")
+    logger.info("listening")
     await co_routine
     pass
 
