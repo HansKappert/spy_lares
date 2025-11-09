@@ -2,3 +2,4 @@ agent-py
 kseniaWebsocketLibrary
 python-dotenv
 async-timeout
+requests

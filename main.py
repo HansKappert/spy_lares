@@ -2,11 +2,13 @@ import aiohttp
 from dotenv import load_dotenv
 import os
 import logging
-import agent
+# import agent
 import asyncio
 # from kseniaWebsocketLibrary import ksenia_lares
 import ksenia_lares
 import logging
+import requests
+import json
 
 load_dotenv()
 
@@ -17,11 +19,28 @@ ksenia_port = int(os.getenv('KSENIA_PORT'))
 ispy_api_ip   =     os.getenv('ISPY_IP'  )
 ispy_api_port = int(os.getenv('ISPY_API_PORT', 8090))
 
+agentdvr_url = f"http://{ispy_api_ip}:{ispy_api_port}"
+
 # WAIT_FROM = os.getenv('WAIT_FROM')
 # WAIT_UNTIL = os.getenv('WAIT_UNTIL')
 
 # POLL_INTERVAL_MINUTES = int(os.getenv('POLL_INTERVAL_MINUTES', 5))  
 
+
+def get_profile(name:str)->int:
+    a = requests.get(agentdvr_url + "/command/getProfiles")
+    if a.ok:
+        json_data = json.loads(a.text)["profiles"]
+        profile_ids = [p["id"] for p in json_data if p["name"]==name]
+        if len(profile_ids) == 1:
+           return profile_ids[0]
+        else:
+            raise f"Unknown profile specified: {name}"
+
+def activate_profile(profile_id:int):
+    a = requests.get(agentdvr_url + f"/command/armProfile?ind={profile_id}")
+    logger = logging.getLogger('ispy_activator')
+    logger.debug(a.text)
 
 async def handle_systems_message(data):
     logger = logging.getLogger('ispy_activator')
@@ -32,16 +51,15 @@ async def handle_systems_message(data):
     if "ARM" in data[0].keys():
         modus = data[0]["ARM"]["D"]
 
-        url = f"http://{ispy_api_ip}:{ispy_api_port}"
-        ispy = agent.Agent(url)
-
         try:
             if modus == "Ingeschakeld":
                 logger.info(f"Camera alerts inschakelen")
-                ispy.arm()
+                activate_profile(get_profile("Nacht"))
+
             if modus == "Uitgeschakeld":
                 logger.info(f"Camera alerts uitschakelen")
-                ispy.disarm()
+                activate_profile(get_profile("Dag"))
+
         except Exception as e:
             logger.info(f"Fout bij afhandelen van event {modus}: {e}")
 
