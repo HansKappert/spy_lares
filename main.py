@@ -69,7 +69,7 @@ async def handle_zone_message(data):
 async def main():
     logging.basicConfig(filename="logging.txt",
                     filemode='a',
-                    format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
+                    format='%(asctime)s,%(msecs)03d %(levelname)s %(name)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.INFO)
 
@@ -77,7 +77,7 @@ async def main():
     ws_manager = ksenia_lares.WebSocketManager(ksenia_ip, ksenia_pin, ksenia_port, logger)
     await ws_manager.connectSecure()
     logger = logging.getLogger('ispy_activator')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     logger.info("connected")
     ws_manager.register_listener('systems', handle_systems_message)
     # ws_manager.register_listener('zones', handle_zone_message)
