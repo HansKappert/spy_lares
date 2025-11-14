@@ -1,10 +1,7 @@
-import aiohttp
 from dotenv import load_dotenv
 import os
 import logging
-# import agent
 import asyncio
-# from kseniaWebsocketLibrary import ksenia_lares
 import ksenia_lares
 import logging
 import requests
@@ -20,11 +17,6 @@ ispy_api_ip   =     os.getenv('ISPY_IP'  )
 ispy_api_port = int(os.getenv('ISPY_API_PORT', 8090))
 
 agentdvr_url = f"http://{ispy_api_ip}:{ispy_api_port}"
-
-# WAIT_FROM = os.getenv('WAIT_FROM')
-# WAIT_UNTIL = os.getenv('WAIT_UNTIL')
-
-# POLL_INTERVAL_MINUTES = int(os.getenv('POLL_INTERVAL_MINUTES', 5))  
 
 
 def get_profile(name:str)->int:
@@ -87,4 +79,17 @@ async def main():
     pass
 
 # asyncio.run(handle_systems_message(''))
-asyncio.run(main())
+if __name__ == '__main__':
+    if not os.path.isfile("main.lock"):
+        try:
+            with open("main.lock","w",encoding="utf8") as f: 
+                print ("Starting program")
+                asyncio.run(main())
+                print ("Ending program")
+        except Exception as e:
+            print (e)
+        finally:
+            print ("Removing lock file")
+            os.remove("main.lock")
+    else:
+        print ("Will not start becasue another instance is already running. If sure that this is not the case: delete file main.lock")
